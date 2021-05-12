@@ -7,7 +7,7 @@
 #	gcc -c $(CFLAGS) fastblur.c -o obj/fastblur.o 
 
 fastblur: fastblur.c
-	gcc -g  fastblur.c -o fastblur -lm
+	gcc -g fastblur.c -o fastblur -lm
 
 clean:
 	rm -f fastblur output.png
