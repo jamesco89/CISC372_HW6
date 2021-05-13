@@ -166,7 +166,7 @@ int main(int argc,char** argv){
     cudaDeviceSynchronize();
     
     // Allocate Unified Memory -- accessible from CPU or GPU
-    //cudaMallocManaged(&img, sizeof(uint8_t)*pWidth*height);    
+    cudaMallocManaged(&img, sizeof(uint8_t)*pWidth*height);    
 
     numBlocks = (height + blockSize - 1) / blockSize;
     
@@ -187,17 +187,17 @@ int main(int argc,char** argv){
     cudaFree(dest);	 
     
     // Now back to int8 so we can save it
-    img = (uint8_t*)malloc(sizeof(uint8_t)*pWidth*height);
+    //img = (uint8_t*)malloc(sizeof(uint8_t)*pWidth*height);
     for (int i = 0; i < pWidth*height; i++){
         img[i] = (uint8_t)hostDest[i];
     	}
     
-    free(hostDest);
+    // free(hostDest);
     
     // Display the result of the image after applying a gauss blur method
     stbi_write_png("output.png", width, height, bpp, img, bpp*width);
     
-     free(img);
+     cudaFree(img);
     
     // Show the time to complete the image after processing with the radius we desired
     printf("Blur with radius %d complete in %f seconds\n", radius, (t2 - t1) / CLOCKS_PER_SEC);
