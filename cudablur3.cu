@@ -118,7 +118,7 @@ void computeColumn(uint8_t* src, float* dest, int pWidth, int height, int radius
 	Returns: Always returns -1
 */
 
-int Usage(char* name){
+int iUsage(char* name){
 	printf("%s: <filename> <blur radius>\n\tblur radius=pixels to average on any side of the current pixel\n",name);
     	return -1;
 }
@@ -143,13 +143,16 @@ int main(int argc,char** argv){
     
     pWidth = width*bpp;  //actual width in bytes of an image row
     
+    cudaMalloc(&destImg, sizeof(uint8_t)*pWidth*height);
+    cudaMemcpy(destImg, img, pWidth*height*sizeof(uint8_t), cudaMemcpyHostToDevice);
+  
     // Allocate device memory
     cudaMalloc(&mid, sizeof(float)*pWidth*height);
     cudaMalloc(&dest,sizeof(float)*pWidth*height);
-    cudaMalloc(&destImg, sizeof(uint8_t)*pWidth*height);
+    //cudaMalloc(&destImg, sizeof(uint8_t)*pWidth*height);
 
     // Transfer data from host to device memory
-    cudaMemcpy(destImg, img, sizeof(uint8_t)*pWidth*height, cudaMemcpyHostToDevice);
+    //cudaMemcpy(destImg, img, pWidth*height*sizeof(uint8_t), cudaMemcpyHostToDevice);
     
     // A clock() function to calculate the loading time of the image
     // Start counting 
@@ -165,7 +168,7 @@ int main(int argc,char** argv){
     //Wait for GPU to finish before accessing on host
     cudaDeviceSynchronize();
     
-    // Allocate a device or host  memory     
+    // Allocate a device or host memory     
     cudaMallocManaged(&img, sizeof(uint8_t)*pWidth*height);
 
     numBlocks = (height + blockSize - 1) / blockSize;
@@ -183,7 +186,7 @@ int main(int argc,char** argv){
     hostDest = (float*)malloc(sizeof(float)*pWidth*height);
 
     // Transfer data back to host memory
-    cudaMemcpy(hostDest, dest, sizeof(float)*pWidth*height, cudaMemcpyDeviceToHost);	 
+    cudaMemcpy(hostDest, dest, pWidth*height*sizeof(float), cudaMemcpyDeviceToHost);	 
     
     // Now back to int8 so we can save it
     // img = (uint8_t*)malloc(sizeof(uint8_t)*pWidth*height);
@@ -198,8 +201,8 @@ int main(int argc,char** argv){
     printf("Blur with radius %d complete in %f seconds\n", radius, (t2 - t1) / CLOCKS_PER_SEC);
   
     // Free memory
-      cudaFree(mid);
-      cudaFree(dest);
-      cudaFree(img);
-      free(hostDest);
+    cudaFree(mid);
+    cudaFree(dest);
+    cudaFree(img);
+    free(hostDest);
 }
