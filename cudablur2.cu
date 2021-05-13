@@ -33,9 +33,7 @@ A Simple CUDA:
 	Check the computed row against height.
 	if the height or width is not divisible by the block size, then we will have some 
 	extra threads that need to return immediately.
- */
-
-/*   
+-------------------------------------------------------------------------------------------   
 Computes a single row of the destination image by summing radius pixels
 Parameters: src: Teh src image as width*height*bpp 1d array
             dest: pre-allocated array of size width*height*bpp to receive summed row
@@ -45,24 +43,10 @@ Parameters: src: Teh src image as width*height*bpp 1d array
             rad: the width of the blur
             bpp: The bits per pixel in the src image
 Returns: None
+-------------------------------------------------------------------------------------------
 */
 __global__
-void computeRow(float* src, float* dest, int row, int height, int pWidth, int radius, int bpp){
-    /*
-           Each row  runs in its own thread
-           Thread block size = 256
-           computeColumn into a kernel, and figuring out the col parameter from the
-           - threadIdx
-           - blockIdx
-           - blockDim
-           Sync up the threads with a call to cudaDeviceSync and repeat the process for each row
-           Convert back to unit8_t array, and save the image
-           Use cuda MallocManaged(...) and cudaFree(...) for all arrays
-           A block size of 256 -> a block acount of(width + 255)/256 coloumns
-           Check in kernel funtion for unsued threads where the computed coloum > pWidth.
-           Do the same for the rows (height + 255)/256
-    */
-
+void computeRow(float* src, float* dest, int pWidth, int height, int radius, int bpp){
     int bradius = radius*bpp;
     int row = blockIdx.x * blockDim.x + threadIdx.x; 
     
@@ -88,39 +72,44 @@ void computeRow(float* src, float* dest, int row, int height, int pWidth, int ra
         	dest[row*pWidth + i] = 0;
         	dest[(row + 1)*pWidth - 1 - i] = 0;
     		}		
-	}	
-
-//Computes a single column of the destination image by summing radius pixels
-//Parameters: src: Teh src image as width*height*bpp 1d array
-//            dest: pre-allocated array of size width*height*bpp to receive summed row
-//            col: The current column number
-//            pWidth: The width of the image * the bpp (i.e. number of bytes in a row)
-//            height: The height of the source image
-//            radius: the width of the blur
-//            bpp: The bits per pixel in the src image
-//Returns: None
+	}
+} 
+   
+/*
+--------------------------------------------------------------------------------------
+Computes a single column of the destination image by summing radius pixels
+Parameters: src: Teh src image as width*height*bpp 1d array
+            dest: pre-allocated array of size width*height*bpp to receive summed row
+            col: The current column number
+            pWidth: The width of the image * the bpp (i.e. number of bytes in a row)
+            height: The height of the source image
+            radius: the width of the blur
+            bpp: The bits per pixel in the src image
+Returns: None
+--------------------------------------------------------------------------------------
+*/
 __global__
-void computeColumn(uint8_t* src, float* dest, int col, int pWidth, int height, int radius, int bpp){
+void computeColumn(uint8_t* src, float* dest, int pWidth, int height, int radius, int bpp){
     int col = blockIdx.x * blockDim.x + threadIdx.x;
     
-    if (col > pWidth){
+    if (pWidth > col){
     	//initialize the first element of each column
     	dest[col] = src[col];
     
     	//start tue sum up to radius*2 by only adding
-    	for (i = 1; i <= radius*2; i++)
+    	for (int i = 1; i <= radius*2; i++)
         	dest[i*pWidth + col] = src[i*pWidth + col] + dest[(i - 1)*pWidth + col];
     
-    	for (i = radius*2 + 1;i < height; i++)
+    	for (int i = radius*2 + 1;i < height; i++)
         	dest[ i*pWidth + col] = src[i*pWidth + col] + dest[(i - 1)*pWidth + col] - src[(i - 2*radius - 1)*pWidth + col];
     
     	//now shift everything up by radius spaces and blank out the last radius items to account for sums at the end of the kernel, instead of the middle
-    	for (i = radius; i < height; i++){
+    	for (int i = radius; i < height; i++){
         	dest[(i - radius)*pWidth + col] = dest[i*pWidth + col] / (radius*2 + 1);
     		}		
 
     	//now the first and last radius values make no sense, so blank them out
-    	for (i = 0; i < radius; i++){
+    	for (int i = 0; i < radius; i++){
         	dest[i*pWidth + col] = 0;
         	dest[(height - 1)*pWidth - i*pWidth + col] = 0;
     		}
@@ -139,12 +128,13 @@ int Usage(char* name){
 }
 
 int main(int argc,char** argv){
-    float t1,t2;
-    int radius=0;
-    int i;
+    float t1, t2;
+    int radius = 0;
+    int blockSize = 256;
+    int numBlocks;
     int width, height, bpp, pWidth;
     char* filename;
-    uint8_t *img;
+    uint8_t *img, *destImg;
     float* dest, *mid;
 
     if (argc != 3)
@@ -155,38 +145,41 @@ int main(int argc,char** argv){
     img = stbi_load(filename, &width, &height, &bpp, 0);   
     
     pWidth = width*bpp;  //actual width in bytes of an image row
-    cudaMallocManaged(&mid, sizeof(float)*pWidth*height);
-    cudaMallocManaged(&dest, sizeof(float)*pWidth*height;
+    
 
-    stbi_image_free(img); //done with image
+    // Allocate Unified Memory -- accessible from CPU or GPU
+    cudaMallocManaged(&mid, sizeof(float)*pWidth*height);
+    cudaMallocManaged(&dest,sizeof(float)*pWidth*height);
+    cudaMalloc(&destImg, sizeof(uint8_t)*pWidth*height);
+    cudaMemcpy(destImg, img, pWidth*height*sizeof(uint8_t), cudaMemcpyHostToDevice);
+      
+    //stbi_image_free(img); //done with image
 
     t1 = clock();
-    int blockSize = 256;
-    gridSize = (pWidth + blockSize - 1) / blockSize;
-    computeColumn<<<gridSize, blockSize>>>(dest, mid, pWidth, height, radius, bpp);
-    
-    //Wait for GPU to finish before accessing on host
-    cudaDeviceSynchronize();
 
-    blockSize = 256;
-    gridSize = (height + blockSize - 1) / blockSize;
-    computeRow(mid, dest, pWidth, height, radius, bpp);
+    numBlocks = (pWidth + blockSize - 1) / blockSize;
+    computeColumn<<<numBlocks, blockSize>>>(destImg, mid, pWidth, height, radius, bpp);
+    stbi_image_free(img); //done with image
+    //Wait for GPU to finish before accessing on host
+    cudaDeviceSynchronize();
+    cudaMallocManaged(&img, sizeof(uint8_t)*pWidth*height);    
+
+    numBlocks = (height + blockSize - 1) / blockSize;
+    computeRow<<<numBlocks, blockSize>>>(mid, dest, pWidth, height, radius, bpp);
     
     //Wait for GPU to finish before accessing on host
     cudaDeviceSynchronize();
-    cudaFree(mid);
+    cudaFree(mid);   
     t2 = clock();
+  
 
     //now back to int8 so we can save it
-    img = malloc(sizeof(uint8_t)*pWidth*height);
-    for (i = 0;i < pWidth*height; i++){
-        img[i]=(uint8_t)dest[i];
+    //img = (uint8_t*)malloc(sizeof(uint8_t)*pWidth*height);
+    for (int i = 0; i < pWidth*height; i++){
+        img[i] = (uint8_t)dest[i];
     	}
-   
+    cudaFree(dest);
     stbi_write_png("output.png", width, height, bpp, img, bpp*width);
-    free(img);
-    printf("Blur with radius %d complete in %ld seconds\n", radius, (t2 - t1)/CLOCKS_PER_SE);
-    cudaFree(mid); // Free device memory
-    cudaFree(dest); // Free device memory
-    free(img) // Free host memory
+    cudaFree(img);
+    printf("Blur with radius %d complete in %f seconds\n", radius, (t2 - t1) / CLOCKS_PER_SEC);
 }
