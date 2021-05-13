@@ -11,6 +11,12 @@ cudablur2: cudablur2.o
 cudablur2.o: cudablur2.cu
 	nvcc -c $(CFLAGS) cudablur2.cu -g -o cudablur2.o
 
+cudablur3: cudanlur3.o
+	nvcc $(CFLAGS) cudablur3.o -g -o cudablur3 -lm
+
+cudablur3.o: cudablur3.cu
+	nvcc -c $(CFLAGS) cudablur3.o -g -o cudablur3 -lm
+
 clean:
-	rm -f cudablur2.o output.png
+	rm -f cudablur2 cudablur2.o cudablur3 cudablur3.o output.png
 
