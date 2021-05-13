@@ -149,7 +149,7 @@ int main(int argc,char** argv){
     cudaMalloc(&destImg, sizeof(uint8_t)*pWidth*height);
     
     // Transfer data from host to device memory
-    cudaMemcpy(destImg, img, sizeof(uint8_t)*pWidth*height, cudaMemcpyHostToDevice);
+    cudaMemcpy(destImg, img, pWidth*height*sizeof(uint8_t), cudaMemcpyHostToDevice);
     
     stbi_image_free(img); //done with image
 
@@ -173,8 +173,6 @@ int main(int argc,char** argv){
     // Wait for GPU to finish before accessing on host
     cudaDeviceSynchronize();   
     
-    cudaFree(mid);
-    
     // End counting
     t2 = clock();
   
@@ -194,8 +192,8 @@ int main(int argc,char** argv){
     printf("Blur with radius %d complete in %f seconds\n", radius, (t2 - t1) / CLOCKS_PER_SEC);
     
     // Free memory
+    cudaFree(mid);
     cudaFree(dest);
-    cudaFree(destImg);
     free(img);
     free(hostDest);
     
