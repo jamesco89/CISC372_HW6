@@ -143,16 +143,13 @@ int main(int argc,char** argv){
     
     pWidth = width*bpp;  //actual width in bytes of an image row
     
-    cudaMalloc(&destImg, sizeof(uint8_t)*pWidth*height);
-    cudaMemcpy(destImg, img, pWidth*height*sizeof(uint8_t), cudaMemcpyHostToDevice);
-  
     // Allocate device memory
     cudaMalloc(&mid, sizeof(float)*pWidth*height);
     cudaMalloc(&dest,sizeof(float)*pWidth*height);
-    //cudaMalloc(&destImg, sizeof(uint8_t)*pWidth*height);
+    cudaMalloc(&destImg, sizeof(uint8_t)*pWidth*height);
 
     // Transfer data from host to device memory
-    //cudaMemcpy(destImg, img, pWidth*height*sizeof(uint8_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(destImg, img, pWidth*height*sizeof(uint8_t), cudaMemcpyHostToDevice);
     
     // A clock() function to calculate the loading time of the image
     // Start counting 
