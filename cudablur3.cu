@@ -118,7 +118,7 @@ void computeColumn(uint8_t* src, float* dest, int pWidth, int height, int radius
 	Returns: Always returns -1
 */
 
-int iUsage(char* name){
+int Usage(char* name){
 	printf("%s: <filename> <blur radius>\n\tblur radius=pixels to average on any side of the current pixel\n",name);
     	return -1;
 }
