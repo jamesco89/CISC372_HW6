@@ -149,7 +149,8 @@ int main(int argc,char** argv){
     sscanf(argv[2], "%d", &radius);
     
     // Start loading an image before processing
-    img = stbi_load(filename, &width, &height, &bpp, 0);   
+    img = stbi_load(filename, &width, &height, &bpp, 0);
+   
     pWidth = width*bpp;  //actual width in bytes of an image row
     
     // Allocate Unified Memory -- accessible from CPU or GPU
@@ -165,6 +166,7 @@ int main(int argc,char** argv){
     t1 = clock();
     
     numBlocks = (pWidth + blockSize - 1) / blockSize;
+    
     // Excecuting a computeComlumn kernel
     computeColumn<<<numBlocks, blockSize>>>(destImg, mid, pWidth, height, radius, bpp);
     
@@ -172,10 +174,12 @@ int main(int argc,char** argv){
     
     // Wait for GPU to finish before accessing on host
     cudaDeviceSynchronize();
+
     // Allocate Unified Memory -- accessible from CPU or GPU
     cudaMallocManaged(&img, sizeof(uint8_t)*pWidth*height);    
 
     numBlocks = (height + blockSize - 1) / blockSize;
+
     // Excecuting a computeRow kernel
     computeRow<<<numBlocks, blockSize>>>(mid, dest, pWidth, height, radius, bpp);
     

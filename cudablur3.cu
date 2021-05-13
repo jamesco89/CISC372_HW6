@@ -166,7 +166,7 @@ int main(int argc,char** argv){
     cudaDeviceSynchronize();
     
     // Allocate a device or host  memory     
-    cudaMallocManaged(&img, sizeof(uint8_t*pWidth*height);
+    cudaMallocManaged(&img, sizeof(uint8_t)*pWidth*height);
 
     numBlocks = (height + blockSize - 1) / blockSize;
     
