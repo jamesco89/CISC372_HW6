@@ -143,7 +143,7 @@ int main(int argc,char** argv){
     
     pWidth = width*bpp;  //actual width in bytes of an image row
     
-    // Allocate Unified Memory -- accessible from CPU or GPU
+    // Allocate device memory
     cudaMalloc(&mid, sizeof(float)*pWidth*height);
     cudaMalloc(&dest,sizeof(float)*pWidth*height);
     cudaMalloc(&destImg, sizeof(uint8_t)*pWidth*height);
@@ -164,7 +164,10 @@ int main(int argc,char** argv){
     
     //Wait for GPU to finish before accessing on host
     cudaDeviceSynchronize();
-        
+    
+    // Allocate Unifed Memory     
+    cudaMaallocManaged(&img, sizeof(uint8_t*pWidth*height);
+
     numBlocks = (height + blockSize - 1) / blockSize;
     
     // Excecuting a computeRow kernel
@@ -176,11 +179,14 @@ int main(int argc,char** argv){
     // End counting
     t2 = clock();
   
+    // Create a space to store in host memory
     hostDest = (float*)malloc(sizeof(float)*pWidth*height);
+
+    // Transfer data back to host memory
     cudaMemcpy(hostDest, dest, sizeof(float)*pWidth*height, cudaMemcpyDeviceToHost);	 
     
     // Now back to int8 so we can save it
-    img = (uint8_t*)malloc(sizeof(uint8_t)*pWidth*height);
+    // img = (uint8_t*)malloc(sizeof(uint8_t)*pWidth*height);
     for (int i = 0; i < pWidth*height; i++){
         img[i] = (uint8_t)hostDest[i];
     	}
@@ -191,7 +197,7 @@ int main(int argc,char** argv){
     // Free memory
      cudaFree(mid);
      cudaFree(dest);
-     free(img);
+     cudaFree(img);
      free(hostDest);
 
     // Show the time to complete the image after processing with the radius we desired
