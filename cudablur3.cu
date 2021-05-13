@@ -131,7 +131,7 @@ int main(int argc,char** argv){
     int width, height, bpp, pWidth;
     char* filename;
     uint8_t *img, *destImg;
-    float* hostDest, *dest, *mid;
+    float *hostDest, *dest, *mid;
 
     if (argc != 3)
         return Usage(argv[0]);
@@ -149,7 +149,7 @@ int main(int argc,char** argv){
     cudaMalloc(&destImg, sizeof(uint8_t)*pWidth*height);
     
     // Transfer data from host to device memory
-    cudaMemcpy(destImg, img, pWidth*height*sizeof(uint8_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(destImg, img, sizeof(uint8_t)*pWidth*height, cudaMemcpyHostToDevice);
     
     stbi_image_free(img); //done with image
 
@@ -188,14 +188,13 @@ int main(int argc,char** argv){
     // Display the result of the image after applying a gauss blur method
     stbi_write_png("output.png", width, height, bpp, img, bpp*width);
     
+    // Free memory
+     cudaFree(mid);
+     cudaFree(dest);
+     free(img);
+     free(hostDest);
+
     // Show the time to complete the image after processing with the radius we desired
     printf("Blur with radius %d complete in %f seconds\n", radius, (t2 - t1) / CLOCKS_PER_SEC);
-    
-    // Free memory
-    cudaFree(mid);
-    cudaFree(dest);
-    free(img);
-    free(hostDest);
-    
-
+  
 }
