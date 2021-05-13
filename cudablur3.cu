@@ -149,7 +149,7 @@ int main(int argc,char** argv){
     cudaMalloc(&destImg, sizeof(uint8_t)*pWidth*height);
 
     // Transfer data from host to device memory
-    cudaMemcpy(destImg, img, pWidth*height*sizeof(uint8_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(destImg, img, sizeof(uint8_t)*pWidth*height, cudaMemcpyHostToDevice);
     
     // A clock() function to calculate the loading time of the image
     // Start counting 
@@ -183,7 +183,7 @@ int main(int argc,char** argv){
     hostDest = (float*)malloc(sizeof(float)*pWidth*height);
 
     // Transfer data back to host memory
-    cudaMemcpy(hostDest, dest, pWidth*height*sizeof(float), cudaMemcpyDeviceToHost);	 
+    cudaMemcpy(hostDest, dest, sizeof(float)*pWidth*height, cudaMemcpyDeviceToHost);	 
     
     // Now back to int8 so we can save it
     // img = (uint8_t*)malloc(sizeof(uint8_t)*pWidth*height);
@@ -201,5 +201,6 @@ int main(int argc,char** argv){
     cudaFree(mid);
     cudaFree(dest);
     cudaFree(img);
+    cudaFree(destImg);
     free(hostDest);
 }
