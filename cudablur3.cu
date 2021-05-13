@@ -147,7 +147,8 @@ int main(int argc,char** argv){
     cudaMalloc(&mid, sizeof(float)*pWidth*height);
     cudaMalloc(&dest,sizeof(float)*pWidth*height);
     cudaMalloc(&destImg, sizeof(uint8_t)*pWidth*height);
-    
+    cudaMalloc(&img, sizeof(uint8_t)*pWidth*height);
+
     // Transfer data from host to device memory
     cudaMemcpy(destImg, img, sizeof(uint8_t)*pWidth*height, cudaMemcpyHostToDevice);
     
@@ -165,8 +166,8 @@ int main(int argc,char** argv){
     //Wait for GPU to finish before accessing on host
     cudaDeviceSynchronize();
     
-    // Allocate Unifed Memory     
-    cudaMaallocManaged(&img, sizeof(uint8_t*pWidth*height);
+    // Allocate a device memory     
+    // cudaMalloc(&img, sizeof(uint8_t*pWidth*height);
 
     numBlocks = (height + blockSize - 1) / blockSize;
     
