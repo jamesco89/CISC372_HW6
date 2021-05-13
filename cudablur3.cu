@@ -147,13 +147,10 @@ int main(int argc,char** argv){
     cudaMalloc(&mid, sizeof(float)*pWidth*height);
     cudaMalloc(&dest,sizeof(float)*pWidth*height);
     cudaMalloc(&destImg, sizeof(uint8_t)*pWidth*height);
-    cudaMalloc(&img, sizeof(uint8_t)*pWidth*height);
 
     // Transfer data from host to device memory
     cudaMemcpy(destImg, img, sizeof(uint8_t)*pWidth*height, cudaMemcpyHostToDevice);
     
-    stbi_image_free(img); //done with image
-
     // A clock() function to calculate the loading time of the image
     // Start counting 
     t1 = clock();
@@ -163,11 +160,13 @@ int main(int argc,char** argv){
     // Excecuting a computeColumn kernel
     computeColumn<<<numBlocks, blockSize>>>(destImg, mid, pWidth, height, radius, bpp);
     
+    stbi_image_free(img); //done with image
+
     //Wait for GPU to finish before accessing on host
     cudaDeviceSynchronize();
     
-    // Allocate a device memory     
-    // cudaMalloc(&img, sizeof(uint8_t*pWidth*height);
+    // Allocate a device or host  memory     
+    cudaMallocManaged(&img, sizeof(uint8_t*pWidth*height);
 
     numBlocks = (height + blockSize - 1) / blockSize;
     
@@ -194,14 +193,13 @@ int main(int argc,char** argv){
     
     // Display the result of the image after applying a gauss blur method
     stbi_write_png("output.png", width, height, bpp, img, bpp*width);
-    
-    // Free memory
-     cudaFree(mid);
-     cudaFree(dest);
-     cudaFree(img);
-     free(hostDest);
-
+   
     // Show the time to complete the image after processing with the radius we desired
     printf("Blur with radius %d complete in %f seconds\n", radius, (t2 - t1) / CLOCKS_PER_SEC);
   
+    // Free memory
+      cudaFree(mid);
+      cudaFree(dest);
+      cudaFree(img);
+      free(hostDest);
 }
