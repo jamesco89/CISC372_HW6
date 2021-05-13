@@ -141,45 +141,55 @@ int main(int argc,char** argv){
         return Usage(argv[0]);
     filename = argv[1];
     sscanf(argv[2], "%d", &radius);
-   
+    // Start loading an input image
     img = stbi_load(filename, &width, &height, &bpp, 0);   
-    
     pWidth = width*bpp;  //actual width in bytes of an image row
     
-
     // Allocate Unified Memory -- accessible from CPU or GPU
     cudaMallocManaged(&mid, sizeof(float)*pWidth*height);
     cudaMallocManaged(&dest,sizeof(float)*pWidth*height);
     cudaMalloc(&destImg, sizeof(uint8_t)*pWidth*height);
+    
+    // Transfer data from host to device memory
     cudaMemcpy(destImg, img, pWidth*height*sizeof(uint8_t), cudaMemcpyHostToDevice);
-      
-    //stbi_image_free(img); //done with image
-
+    
+    // A clock() function to calculate the loading time of the image
+    // Start counting 
     t1 = clock();
-
+    
     numBlocks = (pWidth + blockSize - 1) / blockSize;
+    // Excecuting a computeComlumn kernel
     computeColumn<<<numBlocks, blockSize>>>(destImg, mid, pWidth, height, radius, bpp);
     stbi_image_free(img); //done with image
-    //Wait for GPU to finish before accessing on host
-    cudaDeviceSynchronize();
-    cudaMallocManaged(&img, sizeof(uint8_t)*pWidth*height);    
-
-    numBlocks = (height + blockSize - 1) / blockSize;
-    computeRow<<<numBlocks, blockSize>>>(mid, dest, pWidth, height, radius, bpp);
     
     //Wait for GPU to finish before accessing on host
     cudaDeviceSynchronize();
-    cudaFree(mid);   
+    // Allocate Unified Memory -- accessible from CPU or GPU
+    cudaMallocManaged(&img, sizeof(uint8_t)*pWidth*height);    
+
+    numBlocks = (height + blockSize - 1) / blockSize;
+    // Excecuting a computeRow kernel
+    computeRow<<<numBlocks, blockSize>>>(mid, dest, pWidth, height, radius, bpp);
+    
+    // Wait for GPU to finish before accessing on host
+    cudaDeviceSynchronize();   
+    
+    // End counting
     t2 = clock();
   
-
-    //now back to int8 so we can save it
-    //img = (uint8_t*)malloc(sizeof(uint8_t)*pWidth*height);
+    // Now back to int8 so we can save it
     for (int i = 0; i < pWidth*height; i++){
         img[i] = (uint8_t)dest[i];
     	}
-    cudaFree(dest);
+  
+    // Display the result of the image after applying a gauss blur method
     stbi_write_png("output.png", width, height, bpp, img, bpp*width);
-    cudaFree(img);
+    // Show the time to complete the image
     printf("Blur with radius %d complete in %f seconds\n", radius, (t2 - t1) / CLOCKS_PER_SEC);
+    
+    // Free memory
+    cudaFree(mid);
+    cudaFree(dest);
+    cudaFree(img);
+
 }
