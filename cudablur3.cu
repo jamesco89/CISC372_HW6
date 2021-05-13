@@ -195,6 +195,7 @@ int main(int argc,char** argv){
     
     // Free memory
     cudaFree(dest);
+    cudaFree(destImg);
     free(img);
     free(hostDest);
     
