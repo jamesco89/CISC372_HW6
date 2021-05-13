@@ -1,9 +1,15 @@
-//Simple optimized box blur
-//by: Greg Silber
-//Date: 5/1/2021
-//This program reads an image and performs a simple averaging of pixels within a supplied radius.  For optimization,
-//it does this by computing a running sum for each column within the radius, then averaging that sum.  Then the same for 
-//each row.  This should allow it to be easily parallelized by column then by row, since each call is independent.
+/*
+21S-CISC372-010
+Homework 6 - Blurred cat
+James Cooper
+
+Simple optimized box blur
+by: Greg Silber
+Date: 5/1/2021
+This program reads an image and performs a simple averaging of pixels within a supplied radius.  For optimization,
+it does this by computing a running sum for each column within the radius, then averaging that sum.  Then the same for 
+each row.  This should allow it to be easily parallelized by column then by row, since each call is independent.
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -117,9 +123,9 @@ void computeColumn(uint8_t* src, float* dest, int pWidth, int height, int radius
 }
 
 /*
-Usage: Prints the usage for this program
-Parameters: name: The name of the program
-Returns: Always returns -1
+	Usage: Prints the usage for this program
+	Parameters: name: The name of the program
+	Returns: Always returns -1
 */
 
 int Usage(char* name){
@@ -141,7 +147,8 @@ int main(int argc,char** argv){
         return Usage(argv[0]);
     filename = argv[1];
     sscanf(argv[2], "%d", &radius);
-    // Start loading an input image
+    
+    // Start loading an image before processing
     img = stbi_load(filename, &width, &height, &bpp, 0);   
     pWidth = width*bpp;  //actual width in bytes of an image row
     
@@ -160,9 +167,10 @@ int main(int argc,char** argv){
     numBlocks = (pWidth + blockSize - 1) / blockSize;
     // Excecuting a computeComlumn kernel
     computeColumn<<<numBlocks, blockSize>>>(destImg, mid, pWidth, height, radius, bpp);
+    
     stbi_image_free(img); //done with image
     
-    //Wait for GPU to finish before accessing on host
+    // Wait for GPU to finish before accessing on host
     cudaDeviceSynchronize();
     // Allocate Unified Memory -- accessible from CPU or GPU
     cudaMallocManaged(&img, sizeof(uint8_t)*pWidth*height);    
@@ -184,12 +192,12 @@ int main(int argc,char** argv){
   
     // Display the result of the image after applying a gauss blur method
     stbi_write_png("output.png", width, height, bpp, img, bpp*width);
-    // Show the time to complete the image
+    
+    // Show the time to complete the image after processing with the radius we desired 
     printf("Blur with radius %d complete in %f seconds\n", radius, (t2 - t1) / CLOCKS_PER_SEC);
     
     // Free memory
     cudaFree(mid);
     cudaFree(dest);
     cudaFree(img);
-
 }

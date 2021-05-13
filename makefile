@@ -4,8 +4,13 @@
 #clean:
 #	rm -f fastblur output.png
 
-cudablur2: cudablur2.cu
-	nvcc cudablur2.cu -o cudablur2
+CFLAGS=
+cudablur2: cudablur2.o
+	nvcc $(CFLAGS) cudablur2.o -g -o cudablur2 -lm
+
+cudablur2.o: cudablur2.cu
+	nvcc -c $(CFLAGS) cudablur2.cu -g -o cudablur2.o
 
 clean:
-	rm -f cudablur2 output.png
+	rm -f cudablur2.o output.png
+
