@@ -1,0 +1,25 @@
+Script started on 2021-05-13 21:19:49-04:00
+]0;jamesco@br013:~/CISC372_HW6[jamesco@v001 CISC372_HW6]$ interact -gpu
+
+A command prompt will appear when your session begins
+"Ctrl+d" or "exit" will end your session
+
+--partition=GPU-small,GPU-shared --gpus=v100:1
+salloc -J Interact --partition=GPU-small,GPU-shared --gpus=v100:1
+salloc: Pending job allocation 1181275
+salloc: job 1181275 queued and waiting for resources
+salloc: job 1181275 has been allocated resources
+salloc: Granted job allocation 1181275
+salloc: Waiting for resource configuration
+salloc: Nodes v001 are ready for job
+]0;jamesco@br013:~/CISC372_HW6[jamesco@v001 CISC372_HW6]$ exit./cudablur2 gauss.jpg 40exit[K./cudablur2 gauss.jpg 40
+Blur with radius 40 complete in 0.026700 seconds
+]0;jamesco@br013:~/CISC372_HW6[jamesco@v001 CISC372_HW6]$ ./cudablur2 gauss.jpg 40[1P[1@3[C[C[C[C[C[C[C[C[C[C[C[C[C
+Blur with radius 40 complete in 0.016521 seconds
+]0;jamesco@br013:~/CISC372_HW6[jamesco@v001 CISC372_HW6]$ exit
+exit
+salloc: Relinquishing job allocation 1181275
+]0;jamesco@br013:~/CISC372_HW6[jamesco@v001 CISC372_HW6]$ exit
+exit
+
+Script done on 2021-05-13 21:20:41-04:00
