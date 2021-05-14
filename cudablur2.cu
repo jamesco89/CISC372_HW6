@@ -159,7 +159,7 @@ int main(int argc,char** argv){
     cudaMalloc(&destImg, sizeof(uint8_t)*pWidth*height);
     
     // Transfer data from host to device memory
-    cudaMemcpy(destImg, img, pWidth*height*sizeof(uint8_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(destImg, img, sizeof(uint8_t)*pWidth*height, cudaMemcpyHostToDevice);
     
     // A clock() function to calculate the loading time of the image
     // Start counting 
