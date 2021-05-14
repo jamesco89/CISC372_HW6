@@ -195,7 +195,7 @@ int main(int argc,char** argv){
     	}
   
     // Display the result of the image after applying a gauss blur method
-    stbi_write_png("output.png", width, height, bpp, img, bpp*width);
+    stbi_write_png("output2.png", width, height, bpp, img, bpp*width);
     
     // Show the time completion of the image after processing with the radius we desired 
     printf("Blur with radius %d complete in %f seconds\n", radius, (t2 - t1) / CLOCKS_PER_SEC);
