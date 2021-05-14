@@ -15,7 +15,7 @@ cudablur3: cudanlur3.o
 	nvcc $(CFLAGS) cudablur3.o -o cudablur3 -lm
 
 cudablur3.o: cudablur3.cu
-	nvcc -c $(CFLAGS) cudablur3.o -o cudablur3 -lm
+	nvcc -c $(CFLAGS) cudablur3.cu -o cudablur3.o
 
 clean:
 	rm -f cudablur2 cudablur2.o cudablur3 cudablur3.o output2.png output3.png
