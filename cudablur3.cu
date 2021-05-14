@@ -186,7 +186,6 @@ int main(int argc,char** argv){
     cudaMemcpy(hostDest, dest, sizeof(float)*pWidth*height, cudaMemcpyDeviceToHost);	 
     
     // Now back to int8 so we can save it
-    // img = (uint8_t*)malloc(sizeof(uint8_t)*pWidth*height);
     for (int i = 0; i < pWidth*height; i++){
         img[i] = (uint8_t)hostDest[i];
     	}
@@ -197,7 +196,7 @@ int main(int argc,char** argv){
     // Show the time to complete the image after processing with the radius we desired
     printf("Blur with radius %d complete in %f seconds\n", radius, (t2 - t1) / CLOCKS_PER_SEC);
   
-    // Deallocated device and host  memory
+    // Deallocated device and host memory
     cudaFree(mid);
     cudaFree(dest);
     cudaFree(img);
